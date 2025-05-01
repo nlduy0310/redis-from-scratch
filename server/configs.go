@@ -1,4 +1,4 @@
-package main
+package server
 
 const LISTEN_NETWORK = "tcp"
 const LISTEN_PORT = "6379"

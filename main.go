@@ -1,29 +1,35 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net"
+
+	"github.com/nlduy0310/redis-from-scratch/server"
+	"github.com/nlduy0310/redis-from-scratch/utils"
 )
 
 func main() {
-	l, err := net.Listen(LISTEN_NETWORK, ":"+LISTEN_PORT)
-	panicIf(err, "error setting up listener")
+
+	l, err := net.Listen(server.LISTEN_NETWORK, ":"+server.LISTEN_PORT)
+	utils.PanicIf(err, "error setting up listener")
 
 	conn, err := l.Accept()
-	panicIf(err, "error accepting connection")
+	utils.PanicIf(err, "error accepting connection")
 	defer conn.Close()
 
-	for {
-		msgBuf := make([]byte, MAX_MSG_SIZE_BYTES)
+	resp := server.NewResp(conn)
 
-		_, err := conn.Read(msgBuf)
+	for {
+		msg, err := resp.Read()
 		if err != nil {
 			if err == io.EOF {
-				break
+				fmt.Println("Client closed connection. Shutting down...")
+				return
 			}
-			panicIf(err, "error reading client message")
+			utils.PanicIf(err, "error while reading message from client")
 		}
+		fmt.Printf("Received messaged from client:\n%s\n", msg.String())
 		conn.Write([]byte("+OK\r\n"))
 	}
-
 }
